@@ -1,0 +1,9 @@
+# Miscellaneous
+.DS_Store
+Thumbs.db
+.idea/
+
+# Framework
+vendor/
+phpunit-bootstrap.php
+composer.lock
