@@ -25,7 +25,7 @@ Write-Host -ForegroundColor DarkGreen "---- MyWPStack, let's start---"
 # Get Last Wordpress Release
 Write-Host -ForegroundColor DarkGray "1. Get Last Wordpress Release"
 cd .\htdocs\cms
-#wp core download --locale=fr_FR --force
+wp core download --locale=fr_FR --force
 $WPversion = wp core version
 Write-Host -ForegroundColor Green "Version de Wordpress installée : " $WPversion
 
@@ -104,3 +104,4 @@ $urls = $url, $myThemeRepo
 $urls | % { & $chrome $_ }
 
 Write-Host -ForegroundColor Green "MyWpStack Starter Script is successfully finished, Have Fun"
+Read-Host ""

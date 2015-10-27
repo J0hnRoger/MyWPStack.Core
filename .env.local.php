@@ -9,7 +9,7 @@ return array(
     'DB_USER'       => 'root',
     'DB_PASSWORD'   => '',
     'DB_HOST'       => 'localhost',
-    'WP_HOME'       => 'http://slhb',
+    'WP_HOME'       => 'http://slhb.dev',
     'WP_SITEURL'    => 'http://slhb.dev/cms'
 
 );

@@ -1,2 +1,0 @@
-akismet
-wp-super-cache
