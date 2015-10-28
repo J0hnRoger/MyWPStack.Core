@@ -1,3 +1,20 @@
+MyWpStacjk framework
+------------------
+
+#### Wamp Installation 
+
+1. Set the virtual Host : [WAMP](https://www.kristengrote.com/blog/articles/how-to-set-up-virtual-hosts-using-wamp) 
+2. [Get Node & NPM](https://nodejs.org/en/) and take care to fill the "include in my path" checkbox
+3. [Download WP-CLI](https://github.com/wp-cli/wp-cli/wiki/Alternative-Install-Methods) - I personnaly use [Composer](https://getcomposer.org/download/) then, run `composer create-project wp-cli/wp-cli --no-dev`  
+4. Go to your Path Variables : Panneau de configuration\Système et sécurité\Système > Paramètres système avancés > Variables d'environnement and add the following tool in your path : 
+    - PHP  -> C:\wamp\bin\php\php5.5.12\
+	- MySQL -> C:\wamp\bin\mysql\mysql5.6.17\bin
+	- WP-CLI -> D:\Installs\wp-cli\bin 
+5. Update the `MyWpStack.PS1` script with your own values
+
+### Optionnal
+- You can set an empty GitHub Repository for sourcing your new Theme.
+
 Themosis framework
 ------------------
 
@@ -24,19 +41,3 @@ All issues and pull requests should be filled on the [themosis/framework](https:
 ### License
 
 The Themosis framework is open-source software licensed under [GPL-2+ license](http://www.gnu.org/licenses/gpl-2.0.html).
-
-### MyWPStack
-
-#### Wamp Installation 
-
-1. Set the virtual Host : [WAMP](https://www.kristengrote.com/blog/articles/how-to-set-up-virtual-hosts-using-wamp) 
-2. [Get Node & NPM](https://nodejs.org/en/) and take care to fill the "include in my path" checkbox
-3. [Download WP-CLI](https://github.com/wp-cli/wp-cli/wiki/Alternative-Install-Methods) - I personnaly use [Composer](https://getcomposer.org/download/) then, run `composer create-project wp-cli/wp-cli --no-dev`  
-4. Go to your Path Variables : Panneau de configuration\Système et sécurité\Système > Paramètres système avancés > Variables d'environnement and add the following tool in your path : 
-    - PHP  -> C:\wamp\bin\php\php5.5.12\
-	- MySQL -> C:\wamp\bin\mysql\mysql5.6.17\bin
-	- WP-CLI -> D:\Installs\wp-cli\bin 
-5. Update the `MyWpStack.PS1` script with your own values
-
-### Optionnal
-- You can set an empty GitHub Repository for sourcing your new Theme.
