@@ -7,22 +7,38 @@
 # Global Variables
 #
 
-# path to plugins.txt
-$pluginfilepath="."
+#Local Web Server 
+$localDomain = "slhb.dev"
 
+#GitHub
 $starterThemeRepo = "https://github.com/J0hnRoger/MyWPStack.Theme.git"
 $myThemeRepo = "https://github.com/J0hnRoger/SLHB.git"
 $themeName = "SLHB"
-$dbName = "wp_slhb"
 
+#MySQL
+$dbName = "wp_slhb"
+$dbAdminLogin = "root"
+$dbAdminPassword = ""
+
+#WordPress
 $adminLogin="Admin-SLHB"
 $adminPassword = "SLHB"
 $adminEmail = "jonathan.roger4@gmail.com"
-$url = "http://slhb.dev"
+
+# path to plugins.txt
+$pluginfilepath="."
 
 Write-Host -ForegroundColor DarkGreen "---- MyWPStack, let's start---"
 
-# Get Last Wordpress Release
+Write-Host -ForegroundColor DarkGray "0. Dev' Environment Configuration"
+
+$HostName = hostname.exe;
+ReplaceTag '.\.env.local.php' '%DBNAME%', $dbName
+ReplaceTag '.\.env.local.php' '%DBADMIN%' $dbAdminLogin
+ReplaceTag '.\.env.local.php' '%DBPASSWORD%' $dbAdminPassword
+ReplaceTag '.\.env.local.php' '%SERVER_NAME%' $localDomain
+ReplaceTag '.\config\environment.php' '%HOSTNAME%' $HostName
+
 Write-Host -ForegroundColor DarkGray "1. Get Last Wordpress Release"
 cd .\htdocs\cms
 wp core download --locale=fr_FR --force
@@ -34,7 +50,7 @@ Write-Host -ForegroundColor DarkGray "2. Create SQL DB"
 wp db create
 
 Write-Host -ForegroundColor DarkGray "3. Install Wordpress"
-wp core install --url=$url --title=$themeName --admin_user=$adminLogin --admin_email=$adminEmail --admin_password=$adminPassword
+wp core install --url='http://'.$localDomain --title=$themeName --admin_user=$adminLogin --admin_email=$adminEmail --admin_password=$adminPassword
 
 Write-Host -ForegroundColor DarkGray "4. Install Plugins from MyWpStackPlugins.txt"
 cd ../../
@@ -45,17 +61,21 @@ Get-Content MyWpStackPlugins.txt | Foreach-Object{
 }
 
 Write-Host -ForegroundColor DarkGreen "5. Get Themosis Theme , rename it and activate it"
+
 cd htdocs\content\themes
+
 git clone $starterThemeRepo $themeName
 wp theme activate $themeName
 
 cd $themeName
+
+Write-Host -ForegroundColor DarkGreen "6. Attach the theme to the new Theme repository and add remote"
+
 Remove-Item .git -recurse -force
 
-Write-Host -ForegroundColor DarkGreen "6. Attach the theme to the theme repository and add remote"
 git init
 git add .
-git commit -m $themeName "Initial Commit from MyWPStack repo."
+git commit -m "Initial Commit from MyWPStack repo."
 git remote add origin $myThemeRepo
 git push -u origin master
 
@@ -78,17 +98,13 @@ wp menu item add-post menu-principal 5
 wp menu location assign menu-principal main-menu
 
 Write-Host -ForegroundColor DarkGreen "11. Clean Up the default samples (page, post, plugin, themes)"
-wp post delete 1 --force 
+wp post delete 1 --force
 wp post delete 2 --force 
 
 wp plugin delete hello
-wp plugin delete hello
-wp plugin delete hello
-
 wp theme delete twentytwelve
 wp theme delete twentythirteen
 wp theme delete twentyfourteen
-wp option update blogdescription ''
 
 Write-Host -ForegroundColor DarkGreen "12.Activate Permalinks"
 wp rewrite structure "/%postname%/" --hard
@@ -98,10 +114,30 @@ Write-Host -ForegroundColor DarkGreen "13.Update Categories and Tags"
 wp option update category_base theme
 wp option update tag_base sujet
 
-Write-Host -ForegroundColor DarkGreen "14. Lauch Chrome"
-$chrome = (gi ~\AppData\Local\Google\Chrome\Application\chrome.exe ).FullName
-$urls = $url, $myThemeRepo
-$urls | % { & $chrome $_ }
+Write-Host -ForegroundColor DarkGreen "13.Install NPM & Bower Dependencies"
+npm install
+bower install
+
+Write-Host -ForegroundColor DarkGreen "14. Update GulpFile with Theme Name"
+
+ReplaceTag './gulpfile.js' '%SERVER_NAME%' $localDomain
+ReplaceTag './gulpfile.js' '%THEME_NAME%' $themeName
+
+Write-Host -ForegroundColor DarkGreen "14. Lauch Gulp"
+
+gulp inject
+gulp
 
 Write-Host -ForegroundColor Green "MyWpStack Starter Script is successfully finished, Have Fun"
+
 Read-Host ""
+
+
+#### Utils Function 
+
+function ReplaceTag($filePath, $tag, $value)
+{
+    (Get-Content $filePath) | 
+    Foreach-Object {$_ -replace $tag, $value} | 
+    Out-File $filePath
+}

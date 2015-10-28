@@ -5,7 +5,7 @@
 /*----------------------------------------------------*/
 return array(
 
-    'local'         => 'John-PC',
+    'local'         => '%HOSTNAME%',
     'production'    => ''
 
 );

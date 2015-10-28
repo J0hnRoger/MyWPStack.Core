@@ -5,11 +5,10 @@
 /*----------------------------------------------------*/
 return array(
 
-    'DB_NAME'       => 'wp_slhb',
-    'DB_USER'       => 'root',
-    'DB_PASSWORD'   => '',
+    'DB_NAME'       => '%DBNAME%',
+    'DB_USER'       => '%DBADMIN%',
+    'DB_PASSWORD'   => '%DBPASSWORD%',
     'DB_HOST'       => 'localhost',
-    'WP_HOME'       => 'http://slhb.dev',
-    'WP_SITEURL'    => 'http://slhb.dev/cms'
-
+    'WP_HOME'       => 'http://%SERVER_NAME%',
+    'WP_SITEURL'    => 'http://%SERVER_NAME%/cms'
 );
