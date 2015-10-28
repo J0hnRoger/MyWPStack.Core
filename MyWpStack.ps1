@@ -4,14 +4,13 @@
 ###
 
 #
-# Global Variables
+# Please, Fill these variables :
 #
 
 #Local Web Server 
 $localDomain = "slhb.dev"
 
 #GitHub
-$starterThemeRepo = "https://github.com/J0hnRoger/MyWPStack.Theme.git"
 $myThemeRepo = "https://github.com/J0hnRoger/SLHB.git"
 $themeName = "SLHB"
 
@@ -28,12 +27,30 @@ $adminEmail = "jonathan.roger4@gmail.com"
 # path to plugins.txt
 $pluginfilepath="."
 
+# It looks good, you can execute your script
+###
+# MYWPSTART CODE
+# 
+###
+
+#### Utils Function 
+
+function ReplaceTag($filePath, $tag, $value)
+{
+    (Get-Content $filePath) | 
+    Foreach-Object {$_ -replace $tag, $value} | 
+    Out-File $filePath
+}
+
+$starterThemeRepo = "https://github.com/J0hnRoger/MyWPStack.Theme.git"
+
 Write-Host -ForegroundColor DarkGreen "---- MyWPStack, let's start---"
 
 Write-Host -ForegroundColor DarkGray "0. Dev' Environment Configuration"
 
 $HostName = hostname.exe;
-ReplaceTag '.\.env.local.php' '%DBNAME%', $dbName
+
+ReplaceTag '.\.env.local.php' '%DBNAME%' $dbName
 ReplaceTag '.\.env.local.php' '%DBADMIN%' $dbAdminLogin
 ReplaceTag '.\.env.local.php' '%DBPASSWORD%' $dbAdminPassword
 ReplaceTag '.\.env.local.php' '%SERVER_NAME%' $localDomain
@@ -131,13 +148,3 @@ gulp
 Write-Host -ForegroundColor Green "MyWpStack Starter Script is successfully finished, Have Fun"
 
 Read-Host ""
-
-
-#### Utils Function 
-
-function ReplaceTag($filePath, $tag, $value)
-{
-    (Get-Content $filePath) | 
-    Foreach-Object {$_ -replace $tag, $value} | 
-    Out-File $filePath
-}
