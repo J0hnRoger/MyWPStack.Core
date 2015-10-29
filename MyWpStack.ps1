@@ -33,44 +33,36 @@ $pluginfilepath="."
 # 
 ###
 
-#### Utils Function 
-
-function ReplaceTag($filePath, $tag, $value)
-{
-    (Get-Content $filePath) | 
-    Foreach-Object {$_ -replace $tag, $value} | 
-    Out-File $filePath
-}
-
 $starterThemeRepo = "https://github.com/J0hnRoger/MyWPStack.Theme.git"
 
 Write-Host -ForegroundColor DarkGreen "---- MyWPStack, let's start---"
 
 Write-Host -ForegroundColor DarkGray "0. Dev' Environment Configuration"
 
-$HostName = hostname.exe;
+$HostName = hostname;
 
-ReplaceTag '.\.env.local.php' '%DBNAME%' $dbName
-ReplaceTag '.\.env.local.php' '%DBADMIN%' $dbAdminLogin
-ReplaceTag '.\.env.local.php' '%DBPASSWORD%' $dbAdminPassword
-ReplaceTag '.\.env.local.php' '%SERVER_NAME%' $localDomain
-ReplaceTag '.\config\environment.php' '%HOSTNAME%' $HostName
+ReplaceTag ".\.env.local.php" "%DBNAME%" $dbName
+ReplaceTag ".\.env.local.php" "%DBADMIN%" $dbAdminLogin
+ReplaceTag ".\.env.local.php" "%DBPASSWORD%" $dbAdminPassword
+ReplaceTag ".\.env.local.php" "%SERVER_NAME%" $localDomain
+ReplaceTag ".\config\environment.php" "%HOSTNAME%" $HostName
 
 Write-Host -ForegroundColor DarkGray "1. Get Last Wordpress Release"
 cd .\htdocs\cms
-wp core download --locale=fr_FR --force
+#wp core download --locale=fr_FR --force
 $WPversion = wp core version
 Write-Host -ForegroundColor Green "Version de Wordpress installée : " $WPversion
 
 Write-Host -ForegroundColor DarkGray "2. Create SQL DB"
+
 #wp core config --dbname=$dbName --dbuser=root --dbpass=root --skip-check --extra-php
+cd ../../
 wp db create
 
 Write-Host -ForegroundColor DarkGray "3. Install Wordpress"
 wp core install --url='http://'.$localDomain --title=$themeName --admin_user=$adminLogin --admin_email=$adminEmail --admin_password=$adminPassword
 
 Write-Host -ForegroundColor DarkGray "4. Install Plugins from MyWpStackPlugins.txt"
-cd ../../
 
 Get-Content MyWpStackPlugins.txt | Foreach-Object{
     wp plugin install $_ --activate
@@ -148,3 +140,12 @@ gulp
 Write-Host -ForegroundColor Green "MyWpStack Starter Script is successfully finished, Have Fun"
 
 Read-Host ""
+
+#### Utils Function 
+
+function ReplaceTag($filePath, $tag, $value)
+{
+    (Get-Content $filePath) | 
+    Foreach-Object {$_ -replace $tag, $value} | 
+    Out-File $filePath
+}
