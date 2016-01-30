@@ -3,7 +3,7 @@
 Plugin Name: Themosis framework
 Plugin URI: http://framework.themosis.com/
 Description: A framework for WordPress developers.
-Version: 1.1.3
+Version: 1.2.2
 Author: Julien Lambé
 Author URI: http://www.themosis.com/
 License: GPLv2
@@ -18,6 +18,31 @@ defined('DS') ? DS : define('DS', DIRECTORY_SEPARATOR);
 // Framework textdomain.
 /*----------------------------------------------------*/
 defined('THEMOSIS_FRAMEWORK_TEXTDOMAIN') ? THEMOSIS_FRAMEWORK_TEXTDOMAIN : define('THEMOSIS_FRAMEWORK_TEXTDOMAIN', 'themosis-framework');
+
+/*----------------------------------------------------*/
+// Storage path.
+/*----------------------------------------------------*/
+defined('THEMOSIS_STORAGE') ? THEMOSIS_STORAGE : define('THEMOSIS_STORAGE', WP_CONTENT_DIR.DS.'storage');
+
+/**
+ * Helper function to set the paths.
+ *
+ * @param array
+ * @return void
+ */
+if (!function_exists('themosis_set_paths'))
+{
+    function themosis_set_paths(array $paths)
+    {
+        foreach ($paths as $name => $path)
+        {
+            if (!isset($GLOBALS['themosis_paths'][$name]))
+            {
+                $GLOBALS['themosis_paths'][$name] = realpath($path).DS;
+            }
+        }
+    }
+}
 
 /**
  * Helper function to retrieve the path.
@@ -45,23 +70,23 @@ if (!class_exists('THFWK_Themosis'))
          *
          * @var \THFWK_Themosis
          */
-        private static $instance = null;
+        protected static $instance = null;
 
         /**
          * Framework version.
          *
          * @var float
          */
-        const VERSION = '1.1.3';
+        const VERSION = '1.2.2';
 
         /**
          * Plugin directory name.
          *
          * @var string
          */
-        private static $dirName = '';
+        protected static $dirName = '';
 
-        private function __construct()
+        protected function __construct()
         {
             static::$dirName = static::setDirName(__DIR__);
 
@@ -91,7 +116,7 @@ if (!class_exists('THFWK_Themosis'))
          * @param string
          * @return string
          */
-        private static function setDirName($path)
+        protected static function setDirName($path)
         {
             $parent = static::getParentDirectoryName(dirname($path));
 
@@ -108,7 +133,7 @@ if (!class_exists('THFWK_Themosis'))
          * @param string $path
          * @return string
          */
-        private static function getParentDirectoryName($path)
+        protected static function getParentDirectoryName($path)
         {
             // Check if in the 'mu-plugins' directory.
             if (WPMU_PLUGIN_DIR === $path)
@@ -121,62 +146,23 @@ if (!class_exists('THFWK_Themosis'))
         }
 
         /**
-         * Display a notice in the administration.
-         *
-         * @return void
-         */
-        public function displayMessage()
-        {
-        ?>
-            <div id="message" class="error">
-                <p><?php _e(sprintf('<b>Themosis plugin:</b> %s', "Symfony Class Loader component not found. Make sure to include it before proceeding."), THEMOSIS_FRAMEWORK_TEXTDOMAIN); ?></p>
-            </div>
-        <?php
-        }
-
-        /**
          * Load the framework classes.
          *
          * @return void
          */
-        private function load()
+        protected function load()
         {
             // Default path to Composer autoload file.
             $autoload = __DIR__.DS.'vendor'.DS.'autoload.php';
 
-            if (defined('THEMOSIS_AUTOLOAD'))
+            // Check for autoload file in dev mode (vendor loaded into the plugin)
+            if (file_exists($autoload))
             {
-                if (!THEMOSIS_AUTOLOAD && file_exists($autoload))
-                {
-                    require_once($autoload);
-                }
+                require($autoload);
             }
-            elseif (!defined('THEMOSIS_AUTOLOAD'))
-            {
-                if (file_exists($autoload))
-                {
-                    require_once($autoload);
-                }
-            }
-
-            if (!class_exists('Symfony\Component\ClassLoader\ClassLoader'))
-            {
-                add_action('admin_notices', array($this, 'displayMessage'));
-                return;
-            }
-
-            // Autoload PSR-0 classes.
-            // The autoloading process is not handled by Composer...
-            // This mechanism allows a developer to use dependencies inside the plugin
-            // or to use them at the root of the WordPress project.
-            $loader = new \Symfony\Component\ClassLoader\ClassLoader();
-            $loader->addPrefixes(array(
-                'Themosis' => __DIR__.DS.'src'.DS
-            ));
-            $loader->register();
 
             // Set the framework paths and starts the framework.
-            add_action('after_setup_theme', array($this, 'bootstrap'));
+            $this->bootstrap();
         }
 
         /**
@@ -193,7 +179,7 @@ if (!class_exists('THFWK_Themosis'))
              * filters.
              */
             // Framework paths.
-            $paths = apply_filters('themosis_framework_paths', array());
+            $paths = apply_filters('themosis_framework_paths', []);
 
             // Plugin base path.
             $paths['plugin'] = __DIR__.DS;
@@ -201,20 +187,14 @@ if (!class_exists('THFWK_Themosis'))
             // Framework base path.
             $paths['sys'] = __DIR__.DS.'src'.DS.'Themosis'.DS;
 
+            // Storage path.
+            $paths['storage'] = THEMOSIS_STORAGE;
+
             // Register globally the paths
-            foreach ($paths as $name => $path)
-            {
-               if (!isset($GLOBALS['themosis_paths'][$name]))
-               {
-                   $GLOBALS['themosis_paths'][$name] = realpath($path).DS;
-               }
-            }
+            themosis_set_paths($paths);
 
             // Bootstrap the framework
-            if (isset($GLOBALS['THFWK_Themosis']))
-            {
-                require_once themosis_path('plugin').'bootstrap'.DS.'start.php';
-            }
+            require_once themosis_path('plugin').'bootstrap'.DS.'start.php';
         }
 
         /**
@@ -233,8 +213,4 @@ if (!class_exists('THFWK_Themosis'))
  * Load the main class.
  *
  */
-add_action('plugins_loaded', function(){
-
-	$GLOBALS['THFWK_Themosis'] = THFWK_Themosis::getInstance();
-
-});
+$GLOBALS['THFWK_Themosis'] = THFWK_Themosis::getInstance();

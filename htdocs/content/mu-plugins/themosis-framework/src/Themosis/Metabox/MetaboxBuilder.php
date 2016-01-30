@@ -9,59 +9,59 @@ use Themosis\User\User;
 use Themosis\Validation\ValidationBuilder;
 use Themosis\View\IRenderable;
 
-class MetaboxBuilder extends Wrapper {
+class MetaboxBuilder extends Wrapper implements IMetabox {
 
     /**
      * Metabox instance datas.
      *
      * @var \Themosis\Core\DataContainer
      */
-    private $datas;
+    protected $datas;
 
     /**
      * The metabox view.
      *
      * @var \Themosis\View\View
      */
-    private $view;
+    protected $view;
 
     /**
      * The metabox view sections.
      *
      * @var array
      */
-    private $sections = array();
+    protected $sections = [];
 
     /**
      * A validator instance.
      */
-    private $validator;
+    protected $validator;
 
     /**
      * The display/install event to listen to.
      */
-    private $installEvent;
+    protected $installEvent;
 
     /**
      * The current user instance.
      *
      * @var \Themosis\User\User
      */
-    private $user;
+    protected $user;
 
     /**
      * Whether or not check for user capability.
      *
      * @var bool
      */
-    private $check = false;
+    protected $check = false;
 
     /**
      * The capability to check.
      *
      * @var string
      */
-    private $capability;
+    protected $capability;
 
     /**
      * Build a metabox instance.
@@ -90,7 +90,7 @@ class MetaboxBuilder extends Wrapper {
      * @param \Themosis\View\IRenderable $view The metabox view.
      * @return object
      */
-    public function make($title, $postType, array $options = array(), IRenderable $view = null)
+    public function make($title, $postType, array $options = [], IRenderable $view = null)
     {
         $this->datas['title'] = $title;
         $this->datas['postType'] = $postType;
@@ -110,7 +110,7 @@ class MetaboxBuilder extends Wrapper {
      * @param array $fields A list of fields to display.
      * @return \Themosis\Metabox\MetaboxBuilder
      */
-    public function set(array $fields = array())
+    public function set(array $fields = [])
     {
         // Check if sections are defined.
         $this->sections = $this->getSections($fields);
@@ -126,12 +126,13 @@ class MetaboxBuilder extends Wrapper {
      * Restrict access to a specific user capability.
      *
      * @param string $capability
-     * @return void
+     * @return \Themosis\Metabox\MetaboxBuilder
      */
     public function can($capability)
     {
         $this->capability = $capability;
         $this->check = true;
+        return $this;
     }
 
     /**
@@ -143,10 +144,8 @@ class MetaboxBuilder extends Wrapper {
     {
         if($this->check && !$this->user->can($this->capability)) return;
 
-        $id = md5($this->datas['title']);
-
         // Fields are passed to the metabox $args parameter.
-        add_meta_box($id, $this->datas['title'], array($this, 'build'), $this->datas['postType'], $this->datas['options']['context'], $this->datas['options']['priority'], $this->datas['fields']);
+        add_meta_box($this->datas['options']['id'], $this->datas['title'], [$this, 'build'], $this->datas['postType'], $this->datas['options']['context'], $this->datas['options']['priority'], $this->datas['fields']);
     }
 
     /**
@@ -199,13 +198,19 @@ class MetaboxBuilder extends Wrapper {
         $nonceName = (isset($_POST[Session::nonceName])) ? $_POST[Session::nonceName] : Session::nonceName;
         if (!wp_verify_nonce($nonceName, Session::nonceAction)) return;
 
+        // Grab current custom post type name.
+        $postType = get_post_type($postId);
+
         // Check user capability.
-        if ($this->check && $this->datas['postType'] === $_POST['post_type'])
+        if ($this->check && $this->datas['postType'] === $postType)
         {
             if (!$this->user->can($this->capability)) return;
         }
 
-        $fields = array();
+        // Check current post type...avoid to register fields for all registered post type.
+        if ($postType !== $this->datas['postType']) return;
+
+        $fields = [];
 
         // Loop through the registered fields.
         // With sections.
@@ -221,8 +226,8 @@ class MetaboxBuilder extends Wrapper {
             $fields = $this->datas['fields'];
         }
 
+        // Register post meta.
         $this->register($postId, $fields);
-
     }
 
     /**
@@ -231,7 +236,7 @@ class MetaboxBuilder extends Wrapper {
      * @param array $rules A list of field names and their associated validation rule.
      * @return \Themosis\Metabox\MetaboxBuilder
      */
-    public function validate(array $rules = array())
+    public function validate(array $rules = [])
     {
         $this->datas['rules'] = $rules;
 
@@ -245,7 +250,7 @@ class MetaboxBuilder extends Wrapper {
      * @param array $fields
      * @return void
      */
-    private function register($postId, array $fields)
+    protected function register($postId, array $fields)
     {
         foreach($fields as $field)
         {
@@ -271,7 +276,6 @@ class MetaboxBuilder extends Wrapper {
                             }
                         }
                     }
-
                 }
                 else
                 {
@@ -290,12 +294,13 @@ class MetaboxBuilder extends Wrapper {
      * @param array $options The metabox options.
      * @return array
      */
-    private function parseOptions(array $options)
+    protected function parseOptions(array $options)
     {
-        return wp_parse_args($options, array(
+        return wp_parse_args($options, [
             'context'   => 'normal',
-            'priority'  => 'default'
-        ));
+            'priority'  => 'default',
+            'id'        => md5($this->datas['title'])
+        ]);
     }
 
     /**
@@ -304,9 +309,9 @@ class MetaboxBuilder extends Wrapper {
      * @param array $fields
      * @return array
      */
-    private function getSections(array $fields)
+    protected function getSections(array $fields)
     {
-        $sections = array();
+        $sections = [];
 
         foreach ($fields as $section => $subFields)
         {
@@ -326,7 +331,7 @@ class MetaboxBuilder extends Wrapper {
      * @param array $fields
      * @return void
      */
-    private function setDefaultValue(\WP_Post $post, array $fields)
+    protected function setDefaultValue(\WP_Post $post, array $fields)
     {
         foreach ($fields as $field)
         {
@@ -346,13 +351,13 @@ class MetaboxBuilder extends Wrapper {
      * @param \WP_Post $post
      * @return void
      */
-    private function render(array $fields, $post)
+    protected function render(array $fields, $post)
     {
-        $this->view->with(array(
+        $this->view->with([
             '__fields'          => $fields, // Pass the custom fields
             '__metabox'         => $this, // Pass the metabox instance
             '__post'            => $post // Pass the WP_Post instance
-        ));
+        ]);
 
         echo($this->view->render());
     }

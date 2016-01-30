@@ -7,56 +7,56 @@ use Themosis\Core\Wrapper;
 use Themosis\Validation\ValidationBuilder;
 use Themosis\View\IRenderable;
 
-class PageBuilder extends Wrapper {
-
+class PageBuilder extends Wrapper
+{
     /**
      * The page properties.
      *
      * @var DataContainer
      */
-    private $datas;
+    protected $datas;
 
     /**
      * The page view file.
      *
      * @var \Themosis\View\IRenderable
      */
-    private $view;
+    protected $view;
 
     /**
      * The page validator object.
      *
      * @var \Themosis\Validation\ValidationBuilder
      */
-    private $validator;
+    protected $validator;
 
     /**
      * The page install action.
      *
      * @var static
      */
-    private $pageEvent;
+    protected $pageEvent;
 
     /**
      * The page sections.
      *
      * @var array
      */
-    private $sections;
+    protected $sections;
 
     /**
      * The settings install action.
      *
      * @var static
      */
-    private $settingsEvent;
+    protected $settingsEvent;
 
     /**
      * The page settings.
      *
      * @var array
      */
-    private $settings;
+    protected $settings;
 
     /**
      * Build a Page instance.
@@ -107,13 +107,13 @@ class PageBuilder extends Wrapper {
         $this->datas['slug'] = $slug;
         $this->datas['title'] = $title;
         $this->datas['parent'] = $parent;
-        $this->datas['args'] = array(
+        $this->datas['args'] = [
             'capability'    => 'manage_options',
             'icon'          => '',
             'position'      => null,
             'tabs'          => true
-        );
-        $this->datas['rules'] = array();
+        ];
+        $this->datas['rules'] = [];
 
         return $this;
     }
@@ -126,7 +126,7 @@ class PageBuilder extends Wrapper {
      * @param array $params
      * @return \Themosis\Page\PageBuilder
      */
-    public function set(array $params = array())
+    public function set(array $params = [])
     {
         $this->datas['args'] = array_merge($this->datas['args'], $params);
 
@@ -146,11 +146,11 @@ class PageBuilder extends Wrapper {
     {
         if (!is_null($this->datas['parent']))
         {
-            add_submenu_page($this->datas['parent'], $this->datas['title'], $this->datas['title'], $this->datas['args']['capability'], $this->datas['slug'], array($this, 'displayPage'));
+            add_submenu_page($this->datas['parent'], $this->datas['title'], $this->datas['title'], $this->datas['args']['capability'], $this->datas['slug'], [$this, 'displayPage']);
         }
         else
         {
-            add_menu_page($this->datas['title'], $this->datas['title'], $this->datas['args']['capability'], $this->datas['slug'], array($this, 'displayPage'), $this->datas['args']['icon'], $this->datas['args']['position']);
+            add_menu_page($this->datas['title'], $this->datas['title'], $this->datas['args']['capability'], $this->datas['slug'], [$this, 'displayPage'], $this->datas['args']['icon'], $this->datas['args']['position']);
         }
     }
 
@@ -199,7 +199,7 @@ class PageBuilder extends Wrapper {
      * @param array $sections
      * @return \Themosis\Page\PageBuilder
      */
-    public function addSections(array $sections = array())
+    public function addSections(array $sections = [])
     {
         $this->sections = $sections;
 
@@ -225,7 +225,7 @@ class PageBuilder extends Wrapper {
      * @param array $settings The page settings.
      * @return \Themosis\Page\PageBuilder
      */
-    public function addSettings(array $settings = array())
+    public function addSettings(array $settings = [])
     {
         $this->settings = $settings;
 
@@ -264,7 +264,7 @@ class PageBuilder extends Wrapper {
      *
      * @return void
      */
-    private function installWithTabs()
+    protected function installWithTabs()
     {
         // 1 - Prepare the DB table.
         foreach ($this->sections as $section)
@@ -282,7 +282,7 @@ class PageBuilder extends Wrapper {
         {
             $section = $section->getData();
 
-            add_settings_section($section['slug'], $section['name'], array($this, 'displaySections'), $section['slug']);
+            add_settings_section($section['slug'], $section['name'], [$this, 'displaySections'], $section['slug']);
         }
 
         // 3 - Display settings
@@ -293,7 +293,7 @@ class PageBuilder extends Wrapper {
                 // Add the section to the field.
                 $setting['section'] = $section;
 
-                add_settings_field($setting['name'], $setting['title'], array($this, 'displaySettings'), $section, $section, $setting);
+                add_settings_field($setting['name'], $setting['features']['title'], [$this, 'displaySettings'], $section, $section, $setting);
             }
         }
 
@@ -306,7 +306,7 @@ class PageBuilder extends Wrapper {
         {
             $section = $section->getData();
 
-            register_setting($section['slug'], $section['slug'], array($this, 'validateSettings'));
+            register_setting($section['slug'], $section['slug'], [$this, 'validateSettings']);
         }
     }
 
@@ -315,7 +315,7 @@ class PageBuilder extends Wrapper {
      *
      * @return void
      */
-    private function installWithoutTabs()
+    protected function installWithoutTabs()
     {
         // 1 - Prepare the DB table.
         if (false === get_option($this->datas['slug']))
@@ -328,7 +328,7 @@ class PageBuilder extends Wrapper {
         {
             $section = $section->getData();
 
-            add_settings_section($section['slug'], $section['name'], array($this, 'displaySections'), $this->datas['slug']);
+            add_settings_section($section['slug'], $section['name'], [$this, 'displaySections'], $this->datas['slug']);
         }
 
         // 3 - Display settings
@@ -340,7 +340,7 @@ class PageBuilder extends Wrapper {
                 // it is associated to the page slug.
                 $setting['section'] = $this->datas['slug'];
 
-                add_settings_field($setting['name'], $setting['title'], array($this, 'displaySettings'), $this->datas['slug'], $section, $setting);
+                add_settings_field($setting['name'], $setting['features']['title'], [$this, 'displaySettings'], $this->datas['slug'], $section, $setting);
             }
         }
 
@@ -349,7 +349,7 @@ class PageBuilder extends Wrapper {
         // the wp_options table.
         // When you want to retrieve a setting use the option_group
         // name and the setting id.
-        register_setting($this->datas['slug'], $this->datas['slug'], array($this, 'validateSettings'));
+        register_setting($this->datas['slug'], $this->datas['slug'], [$this, 'validateSettings']);
     }
 
     /**
@@ -394,9 +394,9 @@ class PageBuilder extends Wrapper {
         if (!isset($this->datas['rules']) || !is_array($this->datas['rules'])) return $values;
 
         // Null given
-        if (is_null($values)) return array();
+        if (is_null($values)) return [];
 
-        $sanitized = array();
+        $sanitized = [];
 
         foreach ($values as $setting => $value)
         {
@@ -452,7 +452,7 @@ class PageBuilder extends Wrapper {
      * @param array $rules
      * @return \Themosis\Page\PageBuilder
      */
-    public function validate(array $rules = array())
+    public function validate(array $rules = [])
     {
         $this->datas['rules'] = $rules;
 
@@ -465,7 +465,7 @@ class PageBuilder extends Wrapper {
      * @param string $name The name of the field/setting.
      * @return bool
      */
-    private function isInfinite($name)
+    protected function isInfinite($name)
     {
         foreach ($this->settings as $settings)
         {
@@ -483,10 +483,29 @@ class PageBuilder extends Wrapper {
      *
      * @return string
      */
-    private function getActiveTab()
+    protected function getActiveTab()
     {
         $firstSection = $this->sections[0]->getData();
         return isset($_GET['tab']) ? $_GET['tab'] : $firstSection['slug'];
+    }
+
+    /**
+     * Define the tab URI. Check for extra query parameters.
+     *
+     * @param string $default The default URI to check. Mainly look for query parameters.
+     * @return string
+     */
+    protected function setTabUri($default)
+    {
+        // Get the query parameters from the slug if any...
+        $params = parse_url($default, PHP_URL_QUERY);
+
+        if (!empty($params))
+        {
+            return '?'.$params.'&';
+        }
+
+        return '?';
     }
 
     /**
@@ -506,7 +525,7 @@ class PageBuilder extends Wrapper {
                     $section = $section->getData();
                     $class = ($this->getActiveTab() === $section['slug']) ? 'nav-tab-active' : '';
 
-                    printf('<a href="?page=%s&tab=%s" class="nav-tab %s">%s</a>', $this->datas['slug'], $section['slug'], $class, $section['name']);
+                    printf('<a href="%spage=%s&tab=%s" class="nav-tab %s">%s</a>', $this->setTabUri($this->datas['parent']), $this->datas['slug'], $section['slug'], $class, $section['name']);
                 }
 
             echo('</h2>');

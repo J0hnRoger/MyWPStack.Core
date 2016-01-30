@@ -6,4 +6,5 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
+    'Themosis\\' => array($baseDir . '/htdocs/content/mu-plugins/themosis-framework/src/Themosis'),
 );

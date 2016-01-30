@@ -1,14 +1,19 @@
 <?php
 namespace Themosis\Field\Fields;
 
-use Themosis\Facades\View;
+use Themosis\View\ViewFactory;
 
-class SelectField extends FieldBuilder {
-
-    public function __construct(array $properties)
+class SelectField extends FieldBuilder implements IField
+{
+    /**
+     * Define a core select field.
+     *
+     * @param array $properties
+     * @param ViewFactory $view
+     */
+    public function __construct(array $properties, ViewFactory $view)
     {
-        parent::__construct($properties);
-
+        parent::__construct($properties, $view);
         $this->fieldType();
     }
 
@@ -31,7 +36,7 @@ class SelectField extends FieldBuilder {
      */
     public function metabox()
     {
-        return View::make('metabox._themosisSelectField', array('field' => $this))->render();
+        return $this->view->make('metabox._themosisSelectField', ['field' => $this])->render();
     }
 
     /**
@@ -44,4 +49,16 @@ class SelectField extends FieldBuilder {
     {
         return $this->metabox();
     }
+
+    /**
+     * Handle the HTML code for user output.
+     *
+     * @return string
+     */
+    public function user()
+    {
+        return $this->metabox();
+    }
+
+
 }

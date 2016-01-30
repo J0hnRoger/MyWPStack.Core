@@ -17,7 +17,7 @@ class Asset {
      *
      * @var array
      */
-    protected $allowedAreas = array('admin', 'login');
+    protected $allowedAreas = ['admin', 'login'];
 
     /**
      * Type of the asset.
@@ -47,6 +47,8 @@ class Asset {
      */
     protected static $instances;
 
+    protected static $instantiated;
+
     /**
      * Build an Asset instance.
      *
@@ -74,7 +76,7 @@ class Asset {
      */
     protected function registerInstance()
     {
-        if(isset(static::$instances[$this->area][$this->key])) return;
+        if (isset(static::$instances[$this->area][$this->key])) return;
 
         static::$instances[$this->area][$this->key] = $this;
     }
@@ -85,16 +87,35 @@ class Asset {
      * values are used, simply keep the default front-end area.
      *
      * @param string $area Specify where to load the asset: 'admin' or 'login'.
-     * @return void
+     * @return Asset
      */
     public function to($area)
     {
-        if(is_string($area) && in_array($area, $this->allowedAreas)) {
-
+        if (is_string($area) && in_array($area, $this->allowedAreas))
+        {
             $this->area = $area;
             $this->orderInstances();
-
         }
+
+        return $this;
+    }
+
+    /**
+     * Localize data for the linked asset.
+     * Output JS object right before the script output.
+     *
+     * @param string $objectName The name of the JS variable that will hold the data.
+     * @param mixed $data Any data to attach to the JS variable: string, boolean, object, array, ...
+     * @return Asset
+     */
+    public function localize($objectName, $data)
+    {
+        if ('script' === $this->type)
+        {
+            $this->args['localize'][$objectName] = $data;
+        }
+
+        return $this;
     }
 
     /**
@@ -105,13 +126,10 @@ class Asset {
      */
     protected function orderInstances()
     {
-        if (array_key_exists($this->key, static::$instances['front'])) {
-
-            $instance = static::$instances['front'][$this->key];
+        if (array_key_exists($this->key, static::$instances['front']))
+        {
             unset(static::$instances['front'][$this->key]);
-
-            static::$instances[$this->area][$instance->key] = $instance;
-
+            static::$instances[$this->area][$this->key] = $this;
         }
     }
 
@@ -124,19 +142,20 @@ class Asset {
     {
         $from = current_filter();
 
-        switch($from){
-
+        switch ($from)
+        {
             // Front-end assets.
             case 'wp_enqueue_scripts':
 
-                if(isset(static::$instances['front']) && !empty(static::$instances['front'])){
-
-                    foreach(static::$instances['front'] as $asset){
+                if (isset(static::$instances['front']) && !empty(static::$instances['front']))
+                {
+                    foreach (static::$instances['front'] as $asset)
+                    {
+                        // Check if asset has not yet been called...
+                        if (isset(static::$instantiated['front'][$asset->getKey()])) return;
 
                         $this->register($asset);
-
                     }
-
                 }
 
                 break;
@@ -144,14 +163,15 @@ class Asset {
             // WordPress admin assets.
             case 'admin_enqueue_scripts':
 
-                if(isset(static::$instances['admin']) && !empty(static::$instances['admin'])){
-
-                    foreach(static::$instances['admin'] as $asset){
+                if (isset(static::$instances['admin']) && !empty(static::$instances['admin']))
+                {
+                    foreach (static::$instances['admin'] as $asset)
+                    {
+                        // Check if asset has not yet been called...
+                        if (isset(static::$instantiated['admin'][$asset->getKey()])) return;
 
                         $this->register($asset);
-
                     }
-
                 }
 
                 break;
@@ -159,14 +179,15 @@ class Asset {
             // Login assets.
             case 'login_enqueue_scripts':
 
-                if(isset(static::$instances['login']) && !empty(static::$instances['login'])){
-
-                    foreach(static::$instances['login'] as $asset){
+                if (isset(static::$instances['login']) && !empty(static::$instances['login']))
+                {
+                    foreach (static::$instances['login'] as $asset)
+                    {
+                        // Check if asset has not yet been called...
+                        if (isset(static::$instantiated['login'][$asset->getKey()])) return;
 
                         $this->register($asset);
-
                     }
-
                 }
 
                 break;
@@ -182,15 +203,20 @@ class Asset {
      */
     protected function register(Asset $asset)
     {
-        if($asset->getType() === 'script'){
+        // Avoid duplicate calls to each instance.
+        if ($this->getArea() !== $asset->getArea()) return;
 
+        if ($asset->getType() === 'script')
+        {
             $this->registerScript($asset);
-
-        } else {
-
-            $this->registerStyle($asset);
-
         }
+        else
+        {
+            $this->registerStyle($asset);
+        }
+
+        // Add asset to list of called instances.
+        static::$instantiated[$this->getArea()][$this->getKey()] = $this;
     }
 
     /**
@@ -207,6 +233,15 @@ class Asset {
         $version = (is_string($args['version'])) ? $args['version'] : false;
 
         wp_enqueue_script($args['handle'], $args['path'], $args['deps'], $version, $footer);
+
+        // Add localized data for scripts.
+        if (isset($args['localize']) && !empty($args['localize']))
+        {
+            foreach ($args['localize'] as $objectName => $data)
+            {
+                wp_localize_script($args['handle'], $objectName, $data);
+            }
+        }
     }
 
     /**
@@ -243,6 +278,26 @@ class Asset {
     public function getArgs()
     {
         return $this->args;
+    }
+
+    /**
+     * Return the asset area.
+     *
+     * @return string
+     */
+    public function getArea()
+    {
+        return $this->area;
+    }
+
+    /**
+     * Return the asset key.
+     *
+     * @return string
+     */
+    public function getKey()
+    {
+        return $this->key;
     }
 
 } 

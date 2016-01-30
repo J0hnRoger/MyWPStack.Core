@@ -4,32 +4,40 @@ namespace Themosis\Configuration;
 use Themosis\Facades\Field;
 use Themosis\Facades\Metabox;
 
-class Template extends ConfigTemplate
+class Template
 {
 	/**
-	 * Save the retrieved datas.
+	 * A list of given templates.
+     *
+     * @var array
 	*/
-	protected static $datas = array();
+	protected $data = [];
+
+    public function __construct(array $data)
+    {
+        $this->data = $data;
+    }
 
 	/**
 	 * Init the page template module.
 	 *
-	 * @return void
+	 * @return \Themosis\Configuration\Template
 	*/
-	public static function init()
+	public function make()
 	{
-		if (empty(static::$datas))
-		{
-			return;
-		}
-
 		// Set an empty value for no templates.
-		$templateNames = array_merge(array('none' => __('- None -')), static::names());
+		$templateNames = array_merge(['none' => __('None')], $this->names());
 
 		// Build a select field
-		Metabox::make('Themosis Page Template', 'page', array('context' => 'side', 'priority' => 'core'))->set(array(
-			Field::select('_themosisPageTemplate', array($templateNames), false, array('title' => __('Template', THEMOSIS_FRAMEWORK_TEXTDOMAIN)))
-		));
+		Metabox::make(__('Template'), 'page', [
+            'context'   => 'side',
+            'priority'  => 'core',
+            'id'        => 'themosisTemplate'
+        ])->set([
+			Field::select('_themosisPageTemplate', [$templateNames], ['title' => __('Name')])
+		]);
+
+        return $this;
 	}
 
 	/**
@@ -37,15 +45,15 @@ class Template extends ConfigTemplate
 	 *
 	 * @return array An array of template names.
 	 */
-	private static function names()
+	protected function names()
 	{
-		$names = array();
+		$names = [];
 
-		foreach (static::$datas as $key => $value)
+		foreach ($this->data as $key => $value)
 		{
 			if (is_int($key))
 			{
-                $names[$value] = str_replace(array('-', '_'), ' ', ucfirst(trim($value)));
+                $names[$value] = str_replace(['-', '_'], ' ', ucfirst(trim($value)));
 			}
 			else
 			{

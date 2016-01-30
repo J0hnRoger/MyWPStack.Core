@@ -5,6 +5,11 @@
 (function($){
 
     //------------------------------------------------
+    // COLOR - Custom field
+    //------------------------------------------------
+    $('.themosis-color-field').wpColorPicker();
+
+    //------------------------------------------------
     // COLLECTION - Custom field
     //------------------------------------------------
     var CollectionApp = {
@@ -208,6 +213,9 @@
             // Attach an event on select. Runs when "insert" button is clicked.
             this.frame.on('select', _.bind(this.selectedItems, this));
 
+            // Grab the limit.
+            this.limit = parseInt(this.$el.data('limit'));
+
             // Init the sortable feature.
             this.sort();
         },
@@ -220,6 +228,13 @@
         selectedItems: function()
         {
             var selection = this.frame.state('library').get('selection');
+
+            // Check if a limit is defined. Only filter the selection if selection is larger than the limit.
+            if (this.limit)
+            {
+                var realLimit = ((this.limit - this.collection.length) < 0) ? 0 : this.limit - this.collection.length;
+                selection = selection.slice(0, realLimit);
+            }
 
             selection.map(function(attachment)
             {
@@ -316,17 +331,31 @@
          */
         toggleCollectionContainer: function(collection)
         {
-            var length = collection.length ? true : false;
+            var length = collection.length,
+                addButton = this.$el.find('button#themosis-collection-add'),
+                container = this.$el.find('div.themosis-collection-container');
 
+            // Check the number of collection items.
+            // If total is larger or equal to length, disable the add button.
+            if (this.limit && this.limit <= length)
+            {
+                addButton.addClass('disabled');
+            }
+            else
+            {
+                // Re-activate the ADD button if there are less items than the limit.
+                addButton.removeClass('disabled');
+            }
+
+            // Show the collection container if there are items in collection.
             if (length)
             {
-                // Show the collection container.
-                this.$el.find('div.themosis-collection-container').addClass('show');
+                container.addClass('show');
             }
             else
             {
                 // Hide the collection container.
-                this.$el.find('div.themosis-collection-container').removeClass('show');
+                container.removeClass('show');
             }
         },
 
@@ -338,10 +367,17 @@
         /**
          * Triggered when 'add' button is clicked. Open the media library.
          *
+         * @param e The event object
          * @return void
          */
-        add: function()
+        add: function(e)
         {
+            // Check the Add button.
+            var addButton = $(e.currentTarget);
+
+            // If button is disabled, return.
+            if (addButton.hasClass('disabled')) return;
+
             this.frame.open();
         },
 
@@ -463,7 +499,7 @@
         {
             // Init field properties.
             // The hidden input DOM element.
-            this.input = this.$el.find('#themosis-media-input');
+            this.input = this.$el.find('.themosis-media-input');
 
             // The <p> DOM element.
             this.display = this.$el.find('p.themosis-media__path');
@@ -657,7 +693,7 @@
 
     _.each(mediaFields, function(elem)
     {
-        var input = $(elem).find('input#themosis-media-input');
+        var input = $(elem).find('input.themosis-media-input');
 
         var data = new MediaApp.Models.Media({
             value: input.val(),
@@ -1250,7 +1286,7 @@
          */
         renameId: function(currentId, index)
         {
-            var regex = new RegExp('-([0-9])-');
+            var regex = new RegExp('-([0-9]+)-');
 
             return currentId.replace(regex, '-' + index + '-');
         },
@@ -1264,7 +1300,7 @@
          */
         renameName: function(currentName, index)
         {
-            var regex = new RegExp("([0-9])\]");
+            var regex = new RegExp("([0-9]+)\]");
 
             return currentName.replace(regex, index + ']');
         },
@@ -1278,7 +1314,7 @@
          */
         renameCollectionField: function(field, index)
         {
-            var regex = new RegExp("([0-9])\]"),
+            var regex = new RegExp("([0-9]+)\]"),
                 name = field.data('name'),
                 template = field.find('script#themosis-collection-item-template'),
                 templateContent = template.html();
@@ -1308,6 +1344,75 @@
 
         InfiniteApp.init(elem);
 
+    });
+
+    //------------------------------------------------
+    // Custom publish metabox.
+    //------------------------------------------------
+    // Handle the custom statuses.
+    var submitdiv = $('#themosisSubmitdiv'),
+        editButton = submitdiv.find('.edit-post-status'),
+        selectDiv = submitdiv.find('#post-status-select'),
+        selectTag = submitdiv.find('#post_status'),
+        statusLabel = submitdiv.find('#post-status-display'),
+        statusButtons = submitdiv.find('.save-post-status, .cancel-post-status'),
+        originalPublish = submitdiv.find('input#original_publish'),
+        publishButton = submitdiv.find('input#publish');
+
+    // Edit button
+    editButton.on('click', function(e)
+    {
+        e.preventDefault();
+
+        // Show the select option list.
+        $(this).hide();
+        selectDiv.slideDown(200);
+    });
+
+    // Cancel button or OK buttons
+    statusButtons.on('click', function(e)
+    {
+        e.preventDefault();
+
+        var button = $(this);
+
+        // If 'ok' button, update label span with status label.
+        if (button.hasClass('save-post-status'))
+        {
+            // Grab selected label.
+            var selected = selectTag.find(':selected'),
+                label = selected.text(),
+                publishText = selected.data('publish');
+
+            // Update label text.
+            statusLabel.text(label);
+
+            // Update publish button.
+            // Check if 'draft'
+            if ('draft' === selected.val())
+            {
+                // Change value of the "original_publish" input.
+                originalPublish.val('auto-draft');
+                // Change publish button name attribute.
+                publishButton.attr('name', 'save');
+            }
+
+            // Change publish button text.
+            publishButton.val(publishText);
+        }
+
+        // If 'cancel' button, make sure to reset the select tag value.
+        if (button.hasClass('cancel-post-status'))
+        {
+            var selected = selectTag.find('option[selected="selected"]');
+            selectTag.val(selected.val());
+        }
+
+        // Show back edit button.
+        editButton.show();
+
+        // Close select statuses.
+        selectDiv.slideUp(200);
     });
 
 

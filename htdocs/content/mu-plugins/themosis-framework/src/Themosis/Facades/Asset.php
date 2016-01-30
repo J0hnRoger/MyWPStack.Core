@@ -1,10 +1,10 @@
 <?php
 namespace Themosis\Facades;
 
-class Asset extends Facade{
-
+class Asset extends Facade
+{
     /**
-     * Return the igniter service key responsible for the form class.
+     * Return the igniter service key responsible for the asset class.
      * The key must be the same as the one used in the assigned
      * igniter service.
      *

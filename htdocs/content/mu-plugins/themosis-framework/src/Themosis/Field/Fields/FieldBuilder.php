@@ -2,9 +2,10 @@
 namespace Themosis\Field\Fields;
 
 use Themosis\Core\DataContainer;
+use Themosis\View\ViewFactory;
 
-abstract class FieldBuilder extends DataContainer{
-
+abstract class FieldBuilder extends DataContainer
+{
     /**
      * The field properties.
      *
@@ -20,16 +21,23 @@ abstract class FieldBuilder extends DataContainer{
     protected $type;
 
     /**
+     * A view instance
+     * @var ViewFactory
+     */
+    protected $view;
+
+    /**
      * FieldBuilder instance
      *
      * @param array $properties Field instance properties.
+     * @param ViewFactory $view
      */
-    public function __construct(array $properties)
+    public function __construct(array $properties, ViewFactory $view)
     {
         $this->properties = $properties;
-        $this->setId();
-        $this->setClass();
-        $this->setTitle();
+        $this->view = $view;
+        $this['features'] = $this->parseFeatures();
+        $this['atts'] = $this->parseAttributes();
     }
 
     /**
@@ -44,33 +52,100 @@ abstract class FieldBuilder extends DataContainer{
     }
 
     /**
-     * Set a default class attribute if not defined.
+     * Parse and prepare field feature properties.
      *
-     * @return void
+     * @return array
      */
-    protected function setClass()
+    protected function parseFeatures()
     {
-        $this['class'] = isset($this['class']) ? $this['class'] : 'field-'.$this['name'];
+        $f = $this['features'];
+
+        // Check the title extra property.
+        $f['title'] = isset($f['title']) ? ucfirst($f['title']) : ucfirst($this['name']);
+
+        return $f;
     }
 
     /**
-     * Set a default ID attribute if not defined.
+     * Parse and prepare the field tag attributes.
      *
-     * @return void
+     * @return array The parsed attributes.
      */
-    protected function setId()
+    protected function parseAttributes()
     {
-        $this['id'] = isset($this['id']) ? $this['id'] : $this['name'].'-id';
+        $atts = $this['atts'];
+
+        // Check if developer has defined a custom name attribute.
+        // If so, remove it.
+        if (isset($atts['name']))
+        {
+            unset($atts['name']);
+        }
+
+        // Set the 'id' attribute.
+        $atts['id'] = isset($atts['id']) ? $atts['id'] : $this['name'].'-id';
+
+        // Set the 'class' attribute.
+        $atts['class'] = isset($atts['class']) ? $atts['class'] : 'field-'.$this['name'];
+
+        return $atts;
     }
 
     /**
-     * Set a default label title, display text if not defined.
+     * Set the type data of the media to insert.
+     * If no type is defined, default to 'image'.
      *
      * @return void
      */
-    protected function setTitle()
+    protected function setType()
     {
-        $this['title'] = isset($this['title']) ? ucfirst($this['title']) : ucfirst($this['name']);
+        $allowed = ['image', 'application', 'video', 'audio'];
+        $features = $this['features'];
+
+        if (isset($features['type']) && !in_array($features['type'], $allowed))
+        {
+            $features['type'] = 'image';
+        }
+        elseif (!isset($features['type']))
+        {
+            $features['type'] = 'image';
+        }
+
+        // Set the features back.
+        $this['features'] = $features;
+
+        // Set the data-type attribute.
+        $atts = $this['atts'];
+        $atts['data-type'] = $this['features']['type'];
+        $this['atts'] = $atts;
+    }
+
+    /**
+     * Define the limit of media files or rows we can add.
+     *
+     * @return void
+     */
+    protected function setLimit()
+    {
+        $features = $this['features'];
+        $limit = isset($features['limit']) ? (int) $features['limit'] : 0;
+        $features['limit'] = $limit;
+        $this['features'] = $features;
+    }
+
+    /**
+     * Define a default value as array for checkable fields.
+     *
+     * @return void
+     */
+    protected function defaultCheckableValue()
+    {
+        if ('0' === $this['value']) return;
+
+        if (empty($this['value']))
+        {
+            $this['value'] = [];
+        }
     }
 
     /**
@@ -82,21 +157,5 @@ abstract class FieldBuilder extends DataContainer{
     {
         return $this->type;
     }
-
-    /**
-     * Method that handle the field HTML code for
-     * metabox output.
-     *
-     * @return string
-     */
-    abstract public function metabox();
-
-    /**
-     * Method that handle the field HTML code for
-     * page settings output.
-     *
-     * @return string
-     */
-    abstract public function page();
 
 } 

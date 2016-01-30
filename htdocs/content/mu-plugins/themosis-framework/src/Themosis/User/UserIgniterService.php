@@ -12,13 +12,13 @@ class UserIgniterService extends IgniterService {
      */
     public function ignite()
     {
-        $this->app->bind('user', function($app){
+        $this->app->bind('user', function($app)
+        {
+            // User core view.
+            $view = $app['view'];
+            $view = $view->make('_themosisUserCore');
 
-            $factory = new UserFactory;
-
-            // Register a User instance for the administrator user.
-            $factory->add(1);
-
+            $factory = new UserFactory($view, $app['validation']);
             return $factory;
 
         });

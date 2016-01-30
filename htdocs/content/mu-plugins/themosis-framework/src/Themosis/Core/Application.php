@@ -12,21 +12,21 @@ class Application extends Container {
      *
      * @var array
      */
-    protected $serviceIgniters = array();
+    protected $serviceIgniters = [];
 
     /**
      * The names of the loaded service igniters.
      *
      * @var array
      */
-    protected $loadedIgniters = array();
+    protected $loadedIgniters = [];
 
     /**
      * The deferred services and their igniters.
      *
      * @var array
      */
-    protected $deferredServices = array();
+    protected $deferredServices = [];
 
     /**
      * The request class name.
@@ -57,7 +57,7 @@ class Application extends Container {
      */
     protected function createNewRequest()
     {
-        return forward_static_call(array(static::$requestClass, 'createFromGlobals'));
+        return forward_static_call([static::$requestClass, 'createFromGlobals']);
     }
 
     /**
@@ -69,7 +69,6 @@ class Application extends Container {
     protected function registerBaseBindings(Request $request)
     {
         $this->instance('request', $request);
-
         $this->instance('Themosis\Core\Container', $this);
     }
 
@@ -100,9 +99,11 @@ class Application extends Container {
      */
     public function registerCoreIgniters()
     {
-        $services = array(
-
+        $services = [
+            '\Themosis\Action\ActionIgniterService',
+            '\Themosis\Ajax\AjaxIgniterService',
             '\Themosis\Asset\AssetIgniterService',
+            '\Themosis\Configuration\ConfigIgniterService',
             '\Themosis\Field\FieldIgniterService',
             '\Themosis\Html\FormIgniterService',
             '\Themosis\Html\HtmlIgniterService',
@@ -115,8 +116,7 @@ class Application extends Container {
             '\Themosis\User\UserIgniterService',
             '\Themosis\Validation\ValidationIgniterService',
             '\Themosis\View\ViewIgniterService'
-
-        );
+        ];
 
         foreach ($services as $service)
         {
@@ -136,7 +136,7 @@ class Application extends Container {
      * @param bool $force
      * @return \Themosis\Core\IgniterService
      */
-    public function register($igniter, $options = array(), $force = false)
+    public function register($igniter, $options = [], $force = false)
     {
         if ($registered = $this->getRegistered($igniter) && !$force)
         {
@@ -220,13 +220,10 @@ class Application extends Container {
         try
         {
             $this->refreshRequest($request = Request::createFromBase($request));
-
             return $this->dispatch($request);
-
-        } catch(\Exception $e){
-
+        } catch(\Exception $e)
+        {
             throw $e;
-
         }
     }
 
@@ -257,7 +254,7 @@ class Application extends Container {
         // Here we will bind the install paths into the container as strings that can be
         // accessed from any point in the system. Each path key is prefixed with path
         // so that they have the consistent naming convention inside the container.
-        foreach (array_except($paths, array('app')) as $key => $value)
+        foreach (array_except($paths, ['app']) as $key => $value)
         {
             $this->instance("path.{$key}", realpath($value).DS);
         }
@@ -272,7 +269,6 @@ class Application extends Container {
     protected function refreshRequest(Request $request)
     {
         $this->instance('request', $request);
-
         Facade::clearResolvedInstance('request');
     }
 
@@ -285,9 +281,7 @@ class Application extends Container {
     protected function markAsRegistered($igniter)
     {
         $class = get_class($igniter);
-
         $this->serviceIgniters[] = $igniter;
-
         $this->loadedIgniters[$class] = true;
     }
 
@@ -298,10 +292,14 @@ class Application extends Container {
      */
 	public function registerCoreContainerAliases()
 	{
-		$aliases = array(
+		$aliases = [
+            'action'            => 'Themosis\Action\ActionBuilder',
+            'ajax'              => 'Themosis\Ajax\AjaxBuilder',
 			'app'               => 'Themosis\Core\Application',
 			'asset'             => 'Themosis\Asset\AssetFactory',
 			'asset.finder'      => 'Themosis\Asset\AssetFinder',
+            'config'            => 'Themosis\Configuration\ConfigFactory',
+            'config.finder'     => 'Themosis\Configuration\ConfigFinder',
 			'field'             => 'Themosis\Field\FieldFactory',
 			'scout.compiler'    => 'Themosis\View\Compilers\ScoutCompiler',
 			'form'              => 'Themosis\Html\FormBuilder',
@@ -317,7 +315,7 @@ class Application extends Container {
 			'user'              => 'Themosis\User\UserFactory',
 			'validation'        => 'Themosis\Validation\ValidationBuilder',
 			'view'              => 'Themosis\View\ViewFactory'
-		);
+        ];
 
 		foreach ($aliases as $key => $alias)
 		{

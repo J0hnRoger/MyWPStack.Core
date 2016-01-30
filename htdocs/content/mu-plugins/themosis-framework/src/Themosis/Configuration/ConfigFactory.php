@@ -1,96 +1,39 @@
 <?php
 namespace Themosis\Configuration;
 
-/**
- * Dispatch the right Configuration class
- * depending on its name.
-*/
-class ConfigFactory
+class ConfigFactory implements IConfig
 {
-	/**
-	 * Save a copy of the config name
-	*/
-	private $name = '';
+    /**
+     * Config file finder instance.
+     *
+     * @var ConfigFinder
+     */
+    protected $finder;
 
-	/**
-	 * Save a copy of the config path
-	*/
-	private $path = '';
+    public function __construct(ConfigFinder $finder)
+    {
+        $this->finder = $finder;
+    }
 
     /**
-     * The ConfigFactory constructor.
+     * Return all or specific property from a config file.
      *
-     * @param array $configFile The configuration file properties.
+     * @param string $name The config file name or its property full name.
+     * @return mixed
      */
-	public function __construct(array $configFile)
-	{
-		$this->name = $configFile['name'];
-		$this->path = $configFile['path'];
-	}
-
-	/**
-	 * Handle the config class creation depending
-	 * of the config name.
-	 * 
-	 * @return void
-	 */
-	public function dispatch()
-	{
-		switch ($this->name)
+    public function get($name)
+    {
+        if (strpos($name, '.') !== false)
         {
-			case 'application':
-				$application = new Application();
-				$application->set($this->path);
-				break;
+            list($name, $property) = explode('.', $name);
+        }
 
-			case 'constants':
-			   $constant = new Constant();
-			   $constant->set($this->path);
-			   break;
+        $path = $this->finder->find($name);
+        $properties = include($path);
 
-            case 'images':
-               $images = new Images();
-               $images->set($this->path);
-               break;
+        // Looking for single property
+        if (isset($property) && isset($properties[$property])) return $properties[$property];
 
-			case 'menus':
-			   $menu = new Menu();
-			   $menu->set($this->path);
-			   break;
-            
-			case 'sidebars':
-			   $sidebars = new Sidebar();
-			   $sidebars->set($this->path);
-			   break;
-            
-			case 'supports':
-			   $supports = new Support();
-			   $supports->set($this->path);
-			   break;
-            
-			case 'templates':
-			   $template = new Template();
-			   $template->set($this->path);
-			   break;
-
-            case 'loading':
-                $loading = new Loading();
-                $loading->set($this->path);
-                break;
-
-            case 'models':
-                $models = new Models();
-                $models->set($this->path);
-                break;
-
-            case 'controllers':
-                $controllers = new Controllers();
-                $controllers->set($this->path);
-                break;
-
-			default:
-				break;
-		}
-	}
-
+        return $properties;
+    }
 }

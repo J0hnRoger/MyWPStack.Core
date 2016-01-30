@@ -60,8 +60,10 @@ if (!function_exists('td'))
      */
     function td($value)
     {
+        $attributes = func_get_args();
+        if (count($attributes) == 1) $attributes = $attributes[0];
         echo '<pre>';
-        print_r($value);
+        print_r($attributes);
         echo '</pre>';
         wp_die();
     }
@@ -77,8 +79,10 @@ if (!function_exists('tp'))
      */
     function tp($value)
     {
+        $attributes = func_get_args();
+        if (count($attributes) == 1) $attributes = $attributes[0];
         echo '<pre>';
-        print_r($value);
+        print_r($attributes);
         echo '</pre>';
     }
 }
@@ -92,7 +96,14 @@ if (!function_exists('themosis_assets'))
      */
     function themosis_assets()
     {
-        return get_template_directory_uri().'/app/assets';
+        // Check if the theme helper function exists.
+        // Only if a themosis-theme is used.
+        if (function_exists('themosis_theme_assets'))
+        {
+            return themosis_theme_assets();
+        }
+
+        return get_template_directory_uri().'/resources/assets';
     }
 }
 
@@ -292,7 +303,7 @@ if (!function_exists('themosis_is_template'))
      * @param array $name Template properties.
      * @return boolean True: use of a template. False: no template.
      */
-    function themosis_is_template(array $name = array())
+    function themosis_is_template(array $name = [])
     {
         $queriedObject = get_queried_object();
 
@@ -412,7 +423,7 @@ if (!function_exists('array_set'))
             // values at the correct depth. Then we'll keep digging into the array.
             if ( ! isset($array[$key]) || ! is_array($array[$key]))
             {
-                $array[$key] = array();
+                $array[$key] = [];
             }
 
             $array =& $array[$key];

@@ -2,7 +2,6 @@
 namespace Themosis\Html;
 
 use Themosis\Core\Request;
-use Themosis\Configuration\Application;
 use Themosis\Session\Session;
 
 class FormBuilder {
@@ -11,14 +10,14 @@ class FormBuilder {
      * An HtmlBuilder instance.
      * @var HtmlBuilder
      */
-    private $html;
+    protected $html;
 
     /**
      * The request instance.
      *
      * @var \Themosis\Core\Request
      */
-    private $request;
+    protected $request;
 
     /**
      * Define a FormBuilder instance.
@@ -41,7 +40,7 @@ class FormBuilder {
      * @param array $attributes An array of form attributes.
      * @return string The <form> open tag.
      */
-    public function open($action = null, $method = 'POST', $ssl = false, array $attributes = array())
+    public function open($action = null, $method = 'POST', $ssl = false, array $attributes = [])
     {
         $attributes['action'] = $this->action($action, $ssl);
         $attributes['method'] = $this->method($method);
@@ -51,7 +50,7 @@ class FormBuilder {
         // file for the "accept-charset" attribute.
         if (!array_key_exists('accept-charset', $attributes))
         {
-            $attributes['accept-charset'] = Application::get('encoding');
+            $attributes['accept-charset'] = 'UTF-8';
         }
 
         // ADD NONCE FIELDS
@@ -100,7 +99,7 @@ class FormBuilder {
      * @param bool $ssl Tell to set the URL to https or not.
      * @return string The converted action attribute value.
      */
-    private function action($action, $ssl)
+    protected function action($action, $ssl)
     {
         $action = trim($action);
         $ssl = (bool) $ssl;
@@ -123,11 +122,11 @@ class FormBuilder {
      * @param bool $ssl
      * @return string
      */
-    private function parseAction($uri, $ssl)
+    protected function parseAction($uri, $ssl)
     {
         if (strpos(esc_url($uri), 'http'))
         {
-            $uri = esc_url($uri, array('http', 'https'));
+            $uri = esc_url($uri, ['http', 'https']);
             $uri = (starts_with($uri, '/')) ? substr($uri, 1) : $uri;
 
             return (is_ssl() || $ssl) ? str_replace('http://', 'https://', $uri) : $uri;
@@ -142,7 +141,7 @@ class FormBuilder {
      * @param string $method The request method.
      * @return string The sanitized request method.
      */
-    private function method($method)
+    protected function method($method)
     {
         $method = strtoupper($method);
 
@@ -152,17 +151,12 @@ class FormBuilder {
     /**
      * Build a label tag <label></label>.
      *
-     * @param string $for The 'for' attribute.
      * @param string $display The text to display.
      * @param array $attributes Extra attributes.
      * @return string
      */
-    public function label($for, $display, array $attributes = array())
+    public function label($display, array $attributes = [])
     {
-        $merge = compact('for');
-
-        $attributes = array_merge($attributes, $merge);
-
         return '<label'.$this->html->attributes($attributes).'>'.$display.'</label>';
     }
 
@@ -175,7 +169,7 @@ class FormBuilder {
      * @param array $attributes Extra attributes to populate.
      * @return string An input html tag.
      */
-    public function input($type, $name, $value = null, array $attributes = array())
+    public function input($type, $name, $value = null, array $attributes = [])
     {
         $merge = compact('type', 'name', 'value');
 
@@ -192,7 +186,7 @@ class FormBuilder {
      * @param array $attributes The extras attributes to add.
      * @return string
      */
-    public function text($name, $value = null, array $attributes = array())
+    public function text($name, $value = null, array $attributes = [])
     {
         return $this->input('text', $name, $value, $attributes);
     }
@@ -205,7 +199,7 @@ class FormBuilder {
      * @param array $attributes The extras attributes to add.
      * @return string
      */
-    public function password($name, $value = null, array $attributes = array())
+    public function password($name, $value = null, array $attributes = [])
     {
         return $this->input('password', $name, $value, $attributes);
     }
@@ -218,7 +212,7 @@ class FormBuilder {
      * @param array $attributes
      * @return string
      */
-    public function email($name, $value = null, array $attributes = array())
+    public function email($name, $value = null, array $attributes = [])
     {
         if (!isset($attributes['placeholder']))
         {
@@ -236,7 +230,7 @@ class FormBuilder {
      * @param array $attributes
      * @return string
      */
-    public function number($name, $value = null, array $attributes = array())
+    public function number($name, $value = null, array $attributes = [])
     {
         return $this->input('number', $name, $value, $attributes);
     }
@@ -249,7 +243,7 @@ class FormBuilder {
      * @param array $attributes
      * @return string
      */
-    public function date($name, $value = null, array $attributes = array())
+    public function date($name, $value = null, array $attributes = [])
     {
         return $this->input('date', $name, $value, $attributes);
     }
@@ -262,7 +256,7 @@ class FormBuilder {
      * @param array $attributes
      * @return string
      */
-    public function hidden($name, $value = null, array $attributes = array())
+    public function hidden($name, $value = null, array $attributes = [])
     {
         return $this->input('hidden', $name, $value, $attributes);
     }
@@ -276,7 +270,7 @@ class FormBuilder {
      * @param array $attributes Input extra attributes.
      * @return string
      */
-    public function checkbox($name, $choices, $value = '', array $attributes = array())
+    public function checkbox($name, $choices, $value = '', array $attributes = [])
     {
         return $this->makeGroupCheckableField('checkbox', $name, (array) $choices, (array) $value, $attributes);
     }
@@ -291,7 +285,7 @@ class FormBuilder {
      * @param array $attributes
      * @return string
      */
-    public function checkboxes($name, array $choices, array $value = array(), array $attributes = array())
+    public function checkboxes($name, array $choices, array $value = [], array $attributes = [])
     {
         return $this->makeGroupCheckableField('checkbox', $name, $choices, $value, $attributes);
     }
@@ -305,7 +299,7 @@ class FormBuilder {
      * @param array $attributes
      * @return string
      */
-    public function radio($name, $choices, $value = '', array $attributes = array())
+    public function radio($name, $choices, $value = '', array $attributes = [])
     {
         return $this->makeGroupCheckableField('radio', $name, (array) $choices, (array) $value, $attributes);
     }
@@ -320,21 +314,42 @@ class FormBuilder {
      * @param array $attributes
      * @return string
      */
-    private function makeGroupCheckableField($type, $name, array $choices, array $value, array $attributes)
+    protected function makeGroupCheckableField($type, $name, array $choices, array $value, array $attributes)
     {
         $field = '';
+        $labelAttributes = [];
 
-        foreach($choices as $choice)
+        foreach ($choices as $choiceVal => $choice)
         {
             // Check the value.
             // If checked, add the attribute.
-            if (in_array($choice, $value))
+            if (in_array($choiceVal, $value))
             {
                 $attributes['checked'] = 'checked';
             }
 
+            // Check if there are label attributes defined.
+            if (isset($attributes['label']))
+            {
+                $labelAttributes = (array) $attributes['label'];
+                unset($attributes['label']);
+            }
+
+            // Set the name attribute.
+            // Check if there are multiple options. Radio input are always single as there is only one value selected.
+            // But checkbox could be one or multiple. Only specify the name attribute as array if there more than one choice.
+            if (count($choices) > 1 && 'radio' !== $type)
+            {
+                $n = $name.'[]';
+            }
+            else
+            {
+                $n = $name;
+            }
+
             // Build html output
-            $field.= '<label>'.$this->input($type, $name.'[]', $choice, $attributes).ucfirst($choice).'</label>';
+            $input = $this->input($type, $n, $choiceVal, $attributes).ucfirst($choice);
+            $field.= $this->label($input, $labelAttributes);
 
             // Reset 'checked' attributes.
             unset($attributes['checked']);
@@ -351,7 +366,7 @@ class FormBuilder {
      * @param array $attributes
      * @return string
      */
-    public function textarea($name, $value = null, array $attributes = array())
+    public function textarea($name, $value = null, array $attributes = [])
     {
         $merge = compact('name');
 
@@ -369,7 +384,7 @@ class FormBuilder {
      * @param array $attributes
      * @return string
      */
-    public function select($name, array $options = array(), $value = null, array $attributes = array())
+    public function select($name, array $options = [], $value = null, array $attributes = [])
     {
         $merge = compact('name');
 
@@ -377,7 +392,7 @@ class FormBuilder {
 
         // Check if multiple is defined.
         // If defined, change the name attribute.
-        if (isset($attributes['multiple']) && 'multiple' === $attributes['multiple'])
+        if (in_array('multiple', $attributes) || (isset($attributes['multiple']) && 'multiple' === $attributes['multiple']))
         {
             $attributes['name'] = $attributes['name'].'[]';
         }
@@ -399,7 +414,7 @@ class FormBuilder {
      * @param mixed $value Array if multiple, string if single.
      * @return string
      */
-    private function makeOptionTags(array $options, $value)
+    protected function makeOptionTags(array $options, $value)
     {
         $output = '';
 
@@ -432,11 +447,11 @@ class FormBuilder {
      * @throws HtmlException
      * @return array The parsed options.
      */
-    private function parseSelectOptions(array $options)
+    protected function parseSelectOptions(array $options)
     {
-        $parsedOptions = array();
+        $parsedOptions = [];
 
-        foreach($options as $key => $option)
+        foreach ($options as $key => $option)
         {
             // Check $option is array in order to continue.
             if (!is_array($option)) throw new HtmlException("In order to build the select tag, the parameter must be an array of arrays.");
@@ -462,10 +477,10 @@ class FormBuilder {
      * @param array $subOptions The optgroup options.
      * @return array
      */
-    private function organizeOptions(array $options, array $subOptions)
+    protected function organizeOptions(array $options, array $subOptions)
     {
-        $indexedOptions = array();
-        $convertedOptions = array();
+        $indexedOptions = [];
+        $convertedOptions = [];
 
         // Build the re-indexed options array.
         foreach ($options as $group)
@@ -506,7 +521,7 @@ class FormBuilder {
      * @param mixed $value See makeOptionTags method.
      * @return string
      */
-    private function buildOptgroupTags($label, array $options, $value)
+    protected function buildOptgroupTags($label, array $options, $value)
     {
         $options = $this->parseOptionTags($options, $value);
 
@@ -520,14 +535,24 @@ class FormBuilder {
      * @param mixed $value Array if multiple, string if single.
      * @return string
      */
-    private function parseOptionTags(array $options, $value)
+    protected function parseOptionTags(array $options, $value)
     {
         $output = '';
 
         foreach ($options as $key => $option)
         {
+            $attributes = [];
             $selected = $this->setSelectable($key, $value);
-            $output.= $this->makeOptionTag($key, $option, $selected);
+
+            // Check if option tag has attributes defined.
+            if (is_array($option))
+            {
+                $attributes = isset($option['atts']) ? $option['atts'] : [];
+                $option = isset($option['text']) ? $option['text'] : '';
+            }
+
+            // Build the option tag.
+            $output.= $this->makeOptionTag($key, $option, $selected, $attributes);
         }
 
         return $output;
@@ -539,11 +564,18 @@ class FormBuilder {
      * @param mixed $key String if custom "value", otherwise int.
      * @param string $option Option name to display.
      * @param string $selected The selected attribute.
+     * @param array $attributes The custom attributes for the option tag.
      * @return string
      */
-    private function makeOptionTag($key, $option, $selected = null)
+    protected function makeOptionTag($key, $option, $selected = null, array $attributes = [])
     {
-        return '<option value="'.$key.'" '.$selected.'>'.ucfirst($option).'</option>';
+        // Do not allow to modify the value attribute through the $attributes array.
+        if (isset($attributes['value'])) unset($attributes['value']);
+
+        // Do not allow to modify the selected attribute through the $attributes array.
+        if (isset($attributes['selected'])) unset($attributes['selected']);
+
+        return '<option value="'.$key.'" '.$selected.' '.$this->html->attributes($attributes).'>'.ucfirst($option).'</option>';
     }
 
     /**
@@ -553,7 +585,7 @@ class FormBuilder {
      * @param mixed $value The retrieved value. Array if multiple, string if single.
      * @return string
      */
-    private function setSelectable($key, $value)
+    protected function setSelectable($key, $value)
     {
         $selected = 'selected="selected"';
         // Deal if multiple selection.
@@ -580,7 +612,7 @@ class FormBuilder {
      * @param array $attributes Other tag attributes.
      * @return string
      */
-    public function button($name, $display = null, array $attributes = array())
+    public function button($name, $display = null, array $attributes = [])
     {
         return $this->makeButton('button', $name, $display, $attributes);
     }
@@ -591,7 +623,7 @@ class FormBuilder {
      * @param array $attributes Other tag attributes.
      * @return string
      */
-    public function submit($name, $display = null, array $attributes = array())
+    public function submit($name, $display = null, array $attributes = [])
     {
         return $this->makeButton('submit', $name, $display, $attributes);
     }
@@ -605,7 +637,7 @@ class FormBuilder {
      * @param array $attributes Other tag attributes.
      * @return string
      */
-    private function makeButton($type, $name, $display = null, array $attributes = array())
+    protected function makeButton($type, $name, $display = null, array $attributes = [])
     {
         $merge = compact('type', 'name');
 

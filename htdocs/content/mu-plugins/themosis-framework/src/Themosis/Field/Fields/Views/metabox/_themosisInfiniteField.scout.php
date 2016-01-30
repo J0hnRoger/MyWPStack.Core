@@ -1,12 +1,12 @@
 <div class="themosis-infinite-container">
     <table class="themosis-infinite">
-        <tbody class="themosis-infinite-sortable" data-limit="{{ $field['limit'] }}">
+        <tbody class="themosis-infinite-sortable" data-limit="{{ $field['features']['limit'] }}">
 
         <?php
         // Rows
         for($i = 1; $i <= $field->getRows(); $i++):
 
-            if(0 < $field['limit'] && $i > $field['limit']) break;
+            if(0 < $field['features']['limit'] && $i > $field['features']['limit']) break;
             ?>
 
             <tr class="themosis-infinite-row">
@@ -17,8 +17,10 @@
                         <?php
                         foreach($field['fields'] as $f):
                             // Set the id attribute.
-                            $defaultId = $f['id'];
-                            $f['id'] = $field['name'].'-'.$i.'-'.$f['name'].'-id';
+                            $f_atts = $f['atts']; // Grab ALL attributes of the field.
+                            $defaultId = $f_atts['id']; // Keep a copy of the field id attribute.
+                            $f_atts['id'] = $field['name'].'-'.$i.'-'.$f['name'].'-id'; // Update the id attribute of the field.
+                            $f['atts'] = $f_atts; // Update ALL attributes of the field. Contains its new id value.
 
                             // Grab the value if it exists.
                             if(isset($field['value'][$i][$f['name']])){
@@ -32,11 +34,12 @@
                             $f['name'] = $field['name'].'['.$i.']['.$f['name'].']';
 
                             // Render the field.
-                            echo(Themosis\Facades\View::make('_themosisMetaboxRow', array('field' => $f))->render());
+                            echo(Themosis\Facades\View::make('_themosisMetaboxRow', ['field' => $f])->render());
 
                             // Reset Id, name and value.
-                            $f['id'] = $defaultId;
-                            $f['name'] = $defaultName;
+                            $f_atts['id'] = $defaultId; // Reset field id attribute to its original value.
+                            $f['atts'] = $f_atts; // Update ALL attributes of the field. Contains its original id value.
+                            $f['name'] = $defaultName; // Reset name value with its original name.
                             unset($f['value']);
                         endforeach;
                         ?>
@@ -56,9 +59,9 @@
 
         </tbody>
     </table>
-    @if(isset($field['info']))
+    @if(isset($field['features']['info']))
         <div class="themosis-field-info">
-            <p>{{ $field['info'] }}</p>
+            <p>{{ $field['features']['info'] }}</p>
         </div>
     @endif
     <div class="themosis-infinite-add-field-container">

@@ -9,6 +9,5 @@ return array(
     'johnpbloch\\Composer\\' => array($vendorDir . '/johnpbloch/wordpress-core-installer/src'),
     'Thms' => array($baseDir . '/library'),
     'Symfony\\Component\\HttpFoundation\\' => array($vendorDir . '/symfony/http-foundation'),
-    'Symfony\\Component\\ClassLoader\\' => array($vendorDir . '/symfony/class-loader'),
     'Composer\\Installers\\' => array($vendorDir . '/composer/installers/src'),
 );

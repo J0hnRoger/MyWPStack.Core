@@ -1,19 +1,19 @@
 <?php
 namespace Themosis\Field\Fields;
 
-use Themosis\Facades\View;
+use Themosis\View\ViewFactory;
 
-class RadioField extends FieldBuilder{
-
+class RadioField extends FieldBuilder implements IField
+{
     /**
      * Define a core CheckboxesField.
      *
      * @param array $properties The checkboxes field properties.
+     * @param ViewFactory $view
      */
-    public function __construct(array $properties)
+    public function __construct(array $properties, ViewFactory $view)
     {
-        parent::__construct($properties);
-
+        parent::__construct($properties, $view);
         $this->fieldType();
     }
 
@@ -29,19 +29,6 @@ class RadioField extends FieldBuilder{
     }
 
     /**
-     * Define a default value as array.
-     * Checkboxes field accept only array as value.
-     *
-     * @return void
-     */
-    private function defaultValue()
-    {
-        if(empty($this['value']) || is_string($this['value'])){
-            $this['value'] = array();
-        }
-    }
-
-    /**
      * Method that handle the field HTML code for
      * metabox output.
      *
@@ -51,9 +38,9 @@ class RadioField extends FieldBuilder{
     {
         // If non existing values or if string sent,
         // define the default value for the field.
-        $this->defaultValue();
+        $this->defaultCheckableValue();
 
-        return View::make('metabox._themosisRadioField', array('field' => $this))->render();
+        return $this->view->make('metabox._themosisRadioField', ['field' => $this])->render();
     }
 
     /**
@@ -66,5 +53,16 @@ class RadioField extends FieldBuilder{
     {
         return $this->metabox();
     }
+
+    /**
+     * Handle the HTML code for user output.
+     *
+     * @return string
+     */
+    public function user()
+    {
+        return $this->metabox();
+    }
+
 
 } 
