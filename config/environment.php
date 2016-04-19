@@ -3,6 +3,6 @@
 // Define your environments
 /*----------------------------------------------------*/
 return [
-    'local'         => 'Alexandre-PC',
+    'local'         => 'LAP-20160408C',
     'production'    => ''
 ];

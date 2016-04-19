@@ -3,7 +3,7 @@
 // Local environment vars
 /*----------------------------------------------------*/
 return [
-    'DB_NAME'       => 'slhb',
+    'DB_NAME'       => 'wp_slhb',
     'DB_USER'       => 'root',
     'DB_PASSWORD'   => '',
     'DB_HOST'       => 'localhost',
